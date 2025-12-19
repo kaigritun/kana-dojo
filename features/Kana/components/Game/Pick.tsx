@@ -248,8 +248,7 @@ const PickGame = ({ isHidden }: PickGameProps) => {
     correctRomajiChar,
     correctKanaCharReverse,
     optionCount,
-    getIncorrectOptions,
-    speedStopwatch
+    getIncorrectOptions
   ]);
 
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
