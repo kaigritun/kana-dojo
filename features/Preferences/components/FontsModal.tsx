@@ -5,7 +5,8 @@ import usePreferencesStore from '@/features/Preferences/store/usePreferencesStor
 import { useClick } from '@/shared/hooks/useAudio';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
+import clsx from 'clsx';
 
 interface FontsModalProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface FontCardProps {
   fontName: string;
   fontClassName: string;
   isSelected: boolean;
+  isDefault: boolean;
   onClick: (name: string) => void;
 }
 
@@ -23,35 +25,26 @@ const FontCard = memo(function FontCard({
   fontName,
   fontClassName,
   isSelected,
+  isDefault,
   onClick
 }: FontCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <div
-      className='cursor-pointer rounded-lg p-3'
-      style={{
-        backgroundColor: isHovered
-          ? 'var(--card-color)'
-          : 'var(--background-color)',
-        border: isSelected
-          ? '1px solid var(--main-color)'
-          : '1px solid var(--border-color)'
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <label
+      className={clsx(
+        'flex cursor-pointer items-center justify-center overflow-hidden rounded-xl border bg-(--card-color) px-4 py-4',
+        isSelected ? 'border-(--main-color)' : 'border-(--card-color)'
+      )}
       onClick={() => onClick(fontName)}
     >
-      <div className='mb-2'>
-        <span className='text-sm text-(--main-color)'>
-          {isSelected && '\u2B24 '}
-          {fontName}
+      <p className={clsx('text-center text-xl', fontClassName)}>
+        <span className='text-(--secondary-color)'>
+          {isSelected ? '\u2B24 ' : ''}
         </span>
-      </div>
-      <p className={`text-2xl text-(--secondary-color) ${fontClassName}`}>
-        あいうえお
+        <span>{fontName}</span>
+        {isDefault && ' (default)'}
+        <span className='ml-2 text-(--secondary-color)'>かな道場</span>
       </p>
-    </div>
+    </label>
   );
 });
 
@@ -98,13 +91,14 @@ export default function FontsModal({ open, onOpenChange }: FontsModalProps) {
             </button>
           </div>
           <div id='modal-scroll' className='flex-1 overflow-y-auto px-6 py-6'>
-            <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4'>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
               {fonts.map(fontObj => (
                 <FontCard
                   key={fontObj.name}
                   fontName={fontObj.name}
                   fontClassName={fontObj.font.className}
                   isSelected={selectedFont === fontObj.name}
+                  isDefault={fontObj.name === 'Zen Maru Gothic'}
                   onClick={handleFontClick}
                 />
               ))}
