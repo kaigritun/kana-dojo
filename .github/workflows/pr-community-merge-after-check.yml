@@ -21,7 +21,7 @@ jobs:
       - name: Merge community PR
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.AUTOMATION_PR_TOKEN }}
+          github-token: ${{ secrets.AUTOMATION_PR_REVIEWER_TOKEN }}
           script: |
             async function sleep(ms) {
               return new Promise(function(resolve) { setTimeout(resolve, ms); });
