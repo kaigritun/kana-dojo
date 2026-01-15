@@ -65,23 +65,23 @@ jobs:
               return;
             }
 
-            const issueMatch = prBody.match(/[Cc]loses?\s*#(\d+)|[Ff]ixes?\s*#(\d+)/);
+            const issueMatch = prBody.match(/[Cc]loses?\s*#(\d+)|[Ff]ixes?\s*#(\d+)|[Rr]esolves?\s*#(\d+)/);
             if (issueMatch) {
-              linkedIssue = parseInt(issueMatch[1] || issueMatch[2]);
+              linkedIssue = parseInt(issueMatch[1] || issueMatch[2] || issueMatch[3]);
               console.log('Issue already linked: #' + linkedIssue);
             }
 
             if (!linkedIssue) {
               console.log('No issue linked, searching for matching issue...');
-              
-              const issuesResponse = await github.rest.issues.listForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels: templates.labels.community,
-                state: 'open',
-                per_page: 100
-              });
-              const issues = issuesResponse.data;
+
+              async function searchOpenCommunityIssues(query) {
+                const q = query + ' repo:' + context.repo.owner + '/' + context.repo.repo + ' is:issue is:open label:' + templates.labels.community;
+                const res = await github.rest.search.issuesAndPullRequests({
+                  q: q,
+                  per_page: 10
+                });
+                return res.data.items || [];
+              }
               
               if (isThemeContribution) {
                 let themeName = null;
@@ -101,13 +101,10 @@ jobs:
                 
                 if (themeName) {
                   console.log('Looking for theme issue: ' + themeName);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add New Color Theme:') && 
-                        issue.title.toLowerCase().includes(themeName.toLowerCase())) {
-                      foundIssue = issue.number;
-                      console.log('Found matching theme issue: #' + foundIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add New Color Theme:" "' + themeName + '"');
+                  if (matches.length > 0) {
+                    foundIssue = matches[0].number;
+                    console.log('Found matching theme issue: #' + foundIssue);
                   }
                 }
               } else if (isFactContribution) {
@@ -115,12 +112,10 @@ jobs:
                 if (factIdMatch) {
                   const factId = factIdMatch[1];
                   console.log('Looking for fact issue: #' + factId);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add Japan Fact #' + factId)) {
-                      foundIssue = issue.number;
-                      console.log('Found matching fact issue: #' + foundIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add Japan Fact #' + factId + '"');
+                  if (matches.length > 0) {
+                    foundIssue = matches[0].number;
+                    console.log('Found matching fact issue: #' + foundIssue);
                   }
                 }
               } else if (isProverbContribution) {
@@ -128,12 +123,10 @@ jobs:
                 if (proverbIdMatch) {
                   const proverbId = proverbIdMatch[1];
                   console.log('Looking for proverb issue: #' + proverbId);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add Japanese Proverb #' + proverbId)) {
-                      foundIssue = issue.number;
-                      console.log('Found matching proverb issue: #' + foundIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add Japanese Proverb #' + proverbId + '"');
+                  if (matches.length > 0) {
+                    foundIssue = matches[0].number;
+                    console.log('Found matching proverb issue: #' + foundIssue);
                   }
                 }
               }

@@ -11,7 +11,7 @@ permissions:
 
 # Prevent overlapping runs for the same PR
 concurrency:
-  group: pr-merge-close-${{ github.event.pull_request.number }}
+  group: community-data-updates
   cancel-in-progress: false
 
 jobs:
@@ -55,24 +55,25 @@ jobs:
               return;
             }
 
-            const issueMatch = prBody.match(/[Cc]loses?\s*#(\d+)|[Ff]ixes?\s*#(\d+)/);
+            const issueMatch = prBody.match(/[Cc]loses?\s*#(\d+)|[Ff]ixes?\s*#(\d+)|[Rr]esolves?\s*#(\d+)/);
             let targetIssue = null;
 
             if (issueMatch) {
-              targetIssue = parseInt(issueMatch[1] || issueMatch[2]);
+              targetIssue = parseInt(issueMatch[1] || issueMatch[2] || issueMatch[3]);
               console.log('Found linked issue in PR body: #' + targetIssue);
             }
 
             if (!targetIssue) {
               console.log('No issue linked, searching for matching issue...');
-              
-              const { data: issues } = await github.rest.issues.listForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels: templates.labels.community,
-                state: 'open',
-                per_page: 100
-              });
+
+              async function searchOpenCommunityIssues(query) {
+                const q = query + ' repo:' + context.repo.owner + '/' + context.repo.repo + ' is:issue is:open label:' + templates.labels.community;
+                const res = await github.rest.search.issuesAndPullRequests({
+                  q: q,
+                  per_page: 10
+                });
+                return res.data.items || [];
+              }
               
               if (isThemeContribution) {
                 let themeName = null;
@@ -92,39 +93,32 @@ jobs:
                 
                 if (themeName) {
                   console.log('Looking for theme issue: ' + themeName);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add New Color Theme:') && 
-                        issue.title.toLowerCase().includes(themeName.toLowerCase())) {
-                      targetIssue = issue.number;
-                      console.log('Found matching theme issue: #' + targetIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add New Color Theme:" "' + themeName + '"');
+                  if (matches.length > 0) {
+                    targetIssue = matches[0].number;
+                    console.log('Found matching theme issue: #' + targetIssue);
                   }
                 }
               } else if (isFactContribution) {
                 const factIdMatch = prTitle.match(/#(\d+)/);
-                if (factIdMatch) {
-                  const factId = factIdMatch[1];
+                const factId = factIdMatch ? factIdMatch[1] : null;
+                if (factId) {
                   console.log('Looking for fact issue: #' + factId);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add Japan Fact #' + factId)) {
-                      targetIssue = issue.number;
-                      console.log('Found matching fact issue: #' + targetIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add Japan Fact #' + factId + '"');
+                  if (matches.length > 0) {
+                    targetIssue = matches[0].number;
+                    console.log('Found matching fact issue: #' + targetIssue);
                   }
                 }
               } else if (isProverbContribution) {
                 const proverbIdMatch = prTitle.match(/#(\d+)/);
-                if (proverbIdMatch) {
-                  const proverbId = proverbIdMatch[1];
+                const proverbId = proverbIdMatch ? proverbIdMatch[1] : null;
+                if (proverbId) {
                   console.log('Looking for proverb issue: #' + proverbId);
-                  for (const issue of issues) {
-                    if (issue.title.includes('Add Japanese Proverb #' + proverbId)) {
-                      targetIssue = issue.number;
-                      console.log('Found matching proverb issue: #' + targetIssue);
-                      break;
-                    }
+                  const matches = await searchOpenCommunityIssues('"Add Japanese Proverb #' + proverbId + '"');
+                  if (matches.length > 0) {
+                    targetIssue = matches[0].number;
+                    console.log('Found matching proverb issue: #' + targetIssue);
                   }
                 }
               }
@@ -134,6 +128,15 @@ jobs:
 
             if (targetIssue) {
               try {
+                const { data: issueData } = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: targetIssue
+                });
+
+                const issueTitle = issueData.title || '';
+                const issueTitleLower = issueTitle.toLowerCase();
+
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -157,13 +160,20 @@ jobs:
                 // Mark the item as permanently completed in the backlog
                 if (isThemeContribution) {
                   const themes = JSON.parse(fs.readFileSync(themeBacklogPath, 'utf8'));
-                  // Try to find theme by PR title
+                  // Prefer extracting theme name from the issue title
+                  let themeName = null;
+
+                  const issueThemeMatch = issueTitle.match(/Add New Color Theme:\s*(.+?)(?:\s*\(|$)/i);
+                  if (issueThemeMatch) {
+                    themeName = issueThemeMatch[1].trim();
+                  }
+
+                  // Fallback: try to find theme by PR title
                   const patterns = [
                     /add\s+(.+?)\s+theme/i,
                     /theme[:\s]+(.+)/i,
                     /feat\(theme\)[:\s]+add\s+(.+)/i
                   ];
-                  let themeName = null;
                   for (const pattern of patterns) {
                     const match = prTitle.match(pattern);
                     if (match) {
@@ -186,9 +196,11 @@ jobs:
                   }
                 } else if (isFactContribution) {
                   const facts = JSON.parse(fs.readFileSync(factsBacklogPath, 'utf8'));
-                  const factIdMatch = prTitle.match(/#(\d+)/);
-                  if (factIdMatch) {
-                    const factId = parseInt(factIdMatch[1]);
+                  const issueFactMatch = issueTitle.match(/Add Japan Fact\s*#(\d+)/i);
+                  const prFactMatch = prTitle.match(/#(\d+)/);
+                  const factId = issueFactMatch ? parseInt(issueFactMatch[1]) : (prFactMatch ? parseInt(prFactMatch[1]) : null);
+
+                  if (factId !== null) {
                     const factIndex = facts.findIndex(function(f) { return f.id === factId; });
                     if (factIndex !== -1) {
                       facts[factIndex].completed = true;
@@ -201,9 +213,11 @@ jobs:
                   }
                 } else if (isProverbContribution) {
                   const proverbs = JSON.parse(fs.readFileSync(proverbsBacklogPath, 'utf8'));
-                  const proverbIdMatch = prTitle.match(/#(\d+)/);
-                  if (proverbIdMatch) {
-                    const proverbId = parseInt(proverbIdMatch[1]);
+                  const issueProverbMatch = issueTitle.match(/Add Japanese Proverb\s*#(\d+)/i);
+                  const prProverbMatch = prTitle.match(/#(\d+)/);
+                  const proverbId = issueProverbMatch ? parseInt(issueProverbMatch[1]) : (prProverbMatch ? parseInt(prProverbMatch[1]) : null);
+
+                  if (proverbId !== null) {
                     const proverbIndex = proverbs.findIndex(function(p) { return p.id === proverbId; });
                     if (proverbIndex !== -1) {
                       proverbs[proverbIndex].completed = true;

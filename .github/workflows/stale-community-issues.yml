@@ -38,13 +38,23 @@ jobs:
             const factsBacklogPath = 'data/community/facts-backlog.json';
             const proverbsBacklogPath = 'data/community/proverbs-backlog.json';
 
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: templates.labels.community,
-              state: 'open',
-              per_page: 100
-            });
+            let issues = [];
+            let page = 1;
+            while (true) {
+              const { data: pageItems } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: templates.labels.community,
+                state: 'open',
+                per_page: 100,
+                page: page
+              });
+              issues = issues.concat(pageItems);
+              if (!pageItems || pageItems.length < 100) {
+                break;
+              }
+              page += 1;
+            }
 
             const now = new Date();
             const WARNING_THRESHOLD_MS = templates.config.staleWarningAfterMs;   // 12 hours
