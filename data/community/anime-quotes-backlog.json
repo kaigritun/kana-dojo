@@ -232,5 +232,59 @@
     "anime": "Attack on Titan",
     "character": "Mikasa Ackerman",
     "issued": false
+  },
+  {
+    "id": 27,
+    "japanese": "レロレロレロレロ",
+    "romaji": "Rero rero rero rero",
+    "english": "Lero lero lero lero.",
+    "anime": "JoJo's Bizarre Adventure: Stardust Crusaders",
+    "character": "Noriaki Kakyoin",
+    "issued": false
+  },
+  {
+    "id": 28,
+    "japanese": "フォッフォッフォッ",
+    "romaji": "Fo fo fo fo",
+    "english": "Fosh fosh fosh fosh.",
+    "anime": "One Piece",
+    "character": "Kozuki Sukiyaki",
+    "issued": false
+  },
+  {
+    "id": 29,
+    "japanese": "マママママ",
+    "romaji": "Mama mama mama",
+    "english": "Mama mama mama.",
+    "anime": "One Piece",
+    "character": "Charlotte Linlin (Big Mom)",
+    "issued": false
+  },
+  {
+    "id": 30,
+    "japanese": "シシシシシ",
+    "romaji": "Shishishishi",
+    "english": "Shishishi!",
+    "anime": "One Piece",
+    "character": "Monkey D. Luffy",
+    "issued": false
+  },
+  {
+    "id": 31,
+    "japanese": "グララララ",
+    "romaji": "Gurararara",
+    "english": "Gurararara!",
+    "anime": "One Piece",
+    "character": "Edward Newgate (Whitebeard)",
+    "issued": false
+  },
+  {
+    "id": 32,
+    "japanese": "ゼハハハハ",
+    "romaji": "Ze hahaha",
+    "english": "Ze ha ha ha!",
+    "anime": "One Piece",
+    "character": "Marshall D. Teach (Blackbeard)",
+    "issued": false
   }
 ]

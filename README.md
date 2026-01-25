@@ -19,6 +19,10 @@
 
 ---
 
+## About
+
+KanaDojo is an engaging web-based Japanese learning platform that makes mastering Hiragana, Katakana, Kanji, and Vocabulary fun and intuitive. Built with a focus on aesthetics, customization, and effective learning, it provides an immersive training environment for Japanese language learners at all levels.
+
 ## Contributing
 
 ### For Complete Beginners
@@ -32,10 +36,6 @@ Contributions are welcome! Whether you're fixing bugs, adding features, improvin
 [Live Demo](https://kanadojo.com) · [Documentation](./docs/)
 
 </div>
-
-## About
-
-KanaDojo is an engaging web-based Japanese learning platform that makes mastering Hiragana, Katakana, Kanji, and Vocabulary fun and intuitive. Built with a focus on aesthetics, customization, and effective learning, it provides an immersive training environment for Japanese language learners at all levels.
 
 ## Key Features
 
