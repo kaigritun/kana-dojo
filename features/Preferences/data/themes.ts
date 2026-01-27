@@ -475,7 +475,6 @@ const baseThemeSets: BaseThemeGroup[] = [
         mainColor: 'oklch(80.0% 0.210 180.0 / 1)',
         secondaryColor: 'oklch(85.0% 0.190 320.0 / 1)',
       },
-
       {
         id: 'wisteria-dream',
         backgroundColor: 'oklch(20.0% 0.048 290.0 / 1)',
